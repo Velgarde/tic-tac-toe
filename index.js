@@ -44,7 +44,7 @@ const boxClicked = (a) => {
 
         if (playerWon()) {
             text.innerText = `${currentSym} has won`;
-            setTimeout(restart, 3000);
+            setTimeout(restart, 5000);
             return;
         }
 
@@ -109,7 +109,7 @@ const playerDraw = () => {
 
     if (draw === 9) {
         text.innerText = `It's a Draw`;
-        setTimeout(restart, 3000);
+        setTimeout(restart, 5000);
         return true;
     }
 

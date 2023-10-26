@@ -15,6 +15,7 @@
 
 body {
     color: var(--text);
+    font-family: 'Nerko One', cursive;
 }
 
 h1 {
