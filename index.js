@@ -2,130 +2,105 @@ const boxes = document.querySelectorAll('.box');
 const text = document.querySelector('#heading');
 const strategy = document.querySelector('#strategy');
 const restartButton = document.querySelector('#restart');
-const spaces = [];
+const turnIndicator = document.querySelector('#current-symbol');
+const spaces = Array(9).fill(null);
 const tickCircle = 'O';
 const tickX = 'X';
 
 let currentSym = tickCircle;
 
-
-const drawBoard = ()  => {
-    boxes.forEach(
-        (box, i) => {
-            box.classList.add('grid-item');
-
-            if (i < 3) {
-                box.classList.add('border-bottom');
-            }
-
-            if (i % 3 === 0) {
-                box.classList.add('border-right');
-            }
-
-            if (i % 3 === 2) {
-                box.classList.add('border-left');
-            }
-
-            if (i > 5) {
-                box.classList.add('border-top');
-            }
-
-            box.addEventListener('click', boxClicked);
-        }
-    );
+const drawBoard = () => {
+    boxes.forEach((box) => {
+        box.addEventListener('click', boxClicked);
+    });
 };
 
-
-const boxClicked = (a) => {
-    const id = a.target.id;
-    if ( !spaces[id] ) {
+const boxClicked = (e) => {
+    const id = e.target.id;
+    if (!spaces[id]) {
         spaces[id] = currentSym;
-        a.target.innerText = currentSym;
+        e.target.innerText = currentSym;
 
         if (playerWon()) {
             text.innerText = `${currentSym} has won`;
-            setTimeout(restart, 5000);
+            strategy.innerText = `${strategy.innerText}`;
+            disableBoxes();
+            setTimeout(restart, 3000);
             return;
-        }
-
-        else if (playerDraw()) {
+        } else if (playerDraw()) {
             text.innerText = `DRAW`;
+            disableBoxes();
+            setTimeout(restart, 3000);
             return;
         }
 
         currentSym = currentSym === tickCircle ? tickX : tickCircle;
+        turnIndicator.innerText = currentSym;
     }
 }
-
 
 const playerWon = () => {
-    if ( spaces[0] === currentSym ) {
-        if ( spaces [1] === currentSym && spaces[2] === currentSym ) {
-            strategy.innerText = `${currentSym} has captured the top row`;
-            return true;
-        }
+    const winConditions = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+        [0, 4, 8], [2, 4, 6] // Diagonals
+    ];
 
-        if ( spaces[3] === currentSym && spaces[6] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the left column`;
-            return true;
-        }
-
-        if ( spaces[4] === currentSym && spaces[8] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the diagonal`;
+    for (const condition of winConditions) {
+        const [a, b, c] = condition;
+        if (spaces[a] && spaces[a] === spaces[b] && spaces[a] === spaces[c]) {
+            strategy.innerText = `${currentSym} wins with ${getWinStrategy(condition)}`;
+            highlightWinningCombination(condition);
             return true;
         }
     }
-    if (spaces[8] === currentSym) {
-        if (spaces[5] === currentSym && spaces[2] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the right column`;
-            return true;
-        }
-        if (spaces[6] === currentSym && spaces[7] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the bottom row`;
-            return true;
-        }
-    }
-    if (spaces[4] === currentSym) {
-        if (spaces[1] === currentSym && spaces[7] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the middle column`;
-            return true;
-        }
-        if (spaces[3] === currentSym && spaces[5] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the middle row`;
-            return true;
-        }
-        if (spaces[2] === currentSym && spaces[6] === currentSym) {
-            strategy.innerText = `${currentSym} has captured the diagonal`;
-            return true;
-        }
-    }
-}
-
-const playerDraw = () => {
-    let draw = 0;
-    spaces.forEach((space, i) => {
-        if ( spaces[i] !== null) draw ++;
-    });
-
-    if (draw === 9) {
-        text.innerText = `It's a Draw`;
-        setTimeout(restart, 5000);
-        return true;
-    }
-
     return false;
 }
 
-const restart = () => {
-    spaces.forEach((space, i) => {
-        spaces[i] = null;
+const getWinStrategy = (condition) => {
+    const strategies = {
+        '0,1,2': 'top row',
+        '3,4,5': 'middle row',
+        '6,7,8': 'bottom row',
+        '0,3,6': 'left column',
+        '1,4,7': 'middle column',
+        '2,5,8': 'right column',
+        '0,4,8': 'diagonal from top-left',
+        '2,4,6': 'diagonal from top-right'
+    };
+    return strategies[condition.toString()] || 'a winning combination';
+}
+
+const highlightWinningCombination = (condition) => {
+    condition.forEach(index => {
+        boxes[index].style.backgroundColor = 'rgba(215, 241, 113, 0.5)';
     });
+}
+
+const playerDraw = () => {
+    return spaces.every(space => space !== null);
+}
+
+const disableBoxes = () => {
+    boxes.forEach(box => box.style.pointerEvents = 'none');
+}
+
+const enableBoxes = () => {
+    boxes.forEach(box => box.style.pointerEvents = 'auto');
+}
+
+const restart = () => {
+    spaces.fill(null);
     boxes.forEach((box) => {
         box.innerText = '';
+        box.style.backgroundColor = '';
     });
     text.innerText = 'Play';
     strategy.innerText = '';
+    currentSym = tickCircle;
+    turnIndicator.innerText = currentSym;
+    enableBoxes();
 }
+
 restartButton.addEventListener('click', restart);
 drawBoard();
-
